@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import './Register.css';
 
 function Register() {
@@ -10,6 +11,7 @@ function Register() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const navigate = useNavigate(); // Use the navigate function from react-router-dom
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,6 +29,7 @@ function Register() {
       setSuccess('Registration successful!');
       setError('');
       console.log('Registration response:', response.data);
+      navigate('/questions'); // Navigate to the QuestionPage
     } catch (error) {
       setError('Registration failed. Please try again.');
       setSuccess('');

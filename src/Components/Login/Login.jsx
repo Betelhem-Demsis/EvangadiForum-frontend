@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../Hooks/AuthContext';
 import './Login.css';
 
 function Login() {
@@ -7,6 +9,8 @@ function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -14,8 +18,9 @@ function Login() {
       const response = await axios.post('https://localhost:3000/api/login', { email, password });
       setSuccess('Login successful!');
       setError('');
-      // Handle successful login (e.g., store the token, redirect, etc.)
-      console.log('Login response:', response.data);
+      localStorage.setItem('token', response.data.token);
+      login(); // Update login state
+      navigate('/questions');
     } catch (error) {
       setError('Invalid email or password');
       setSuccess('');
@@ -31,7 +36,6 @@ function Login() {
           <p>
             Don't have an account? <a href='/register'>Create a new account</a>
           </p>
-          
           <div className='form-group'>
             <label htmlFor='email'></label>
             <input
