@@ -1,68 +1,91 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import axios from 'axios';
-import './QuestionDetail.css';
+import React, { useEffect, useState, useContext } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import { AuthContext } from "../../Hooks/AuthContext";
+import "./QuestionDetail.css";
 
 function QuestionDetail() {
-  const { question_id } = useParams();
+  const { questionid } = useParams();
   const [question, setQuestion] = useState(null);
   const [answers, setAnswers] = useState([]);
-  const [newAnswer, setNewAnswer] = useState('');
-  const [error, setError] = useState('');
+  const [newAnswer, setNewAnswer] = useState("");
+  const [error, setError] = useState("");
+  const { isLoggedIn } = useContext(AuthContext);
 
-  // Function to fetch question details
-  const fetchQuestion = async () => {
-    try {
-      const response = await axios.get(`https://localhost:3000/api/question/${question_id}`);
-      setQuestion(response.data.question);
-    } catch (error) {
-      console.error('Failed to fetch question details:', error);
-      setError('Failed to fetch question details. Please try again later.');
-    }
-  };
-
-  // Function to fetch answers
-  const fetchAnswers = async () => {
-    try {
-      const response = await axios.get(`https://localhost:3000/api/answer/${question_id}`);
-      setAnswers(response.data.answers);
-    } catch (error) {
-      if (error.response && error.response.status === 404) {
-        setAnswers([]); // No answers found
-      } else {
-        console.error('Failed to fetch answers:', error);
-        setError('Failed to fetch answers. Please try again later.');
-      }
-    }
-  };
-
-  // useEffect to fetch question and answers on component mount
   useEffect(() => {
-    fetchQuestion();
-    fetchAnswers();
-  }, [question_id]);
+    const fetchData = async () => {
+      if (!questionid) {
+        setError("Invalid question ID.");
+        return;
+      }
 
-  // Function to handle answer submission
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setError("Unauthorized access. Please log in.");
+          return;
+        }
+
+        const [questionRes, answersRes] = await Promise.all([
+          axios.get(`http://127.0.0.1:5000/api/questions/${questionid}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`http://127.0.0.1:5000/api/answers/${questionid}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        setQuestion(questionRes.data.question);
+        setAnswers(answersRes.data.answers || []);
+      } catch (err) {
+        console.error("Failed to fetch data:", err);
+        setError("Failed to load question and answers.");
+      }
+    };
+
+    fetchData();
+  }, [questionid]);
+
   const handleAnswerSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const requestData = { question_id, user_id: 1, body: newAnswer }; // Include user_id
+      const token = localStorage.getItem("token");
+      if (!isLoggedIn || !token) {
+        setError("You must be logged in to submit an answer.");
+        return;
+      }
+
+      if (!newAnswer.trim()) {
+        setError("Please enter a valid answer.");
+        return;
+      }
+
+      const requestData = {
+        questionid: parseInt(questionid, 10),
+        answer: newAnswer,
+      };
       const response = await axios.post(
-        'https://localhost:3000/api/answer',
+        "http://127.0.0.1:5000/api/answers",
         requestData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json",
           },
         }
       );
-      setNewAnswer('');
-      fetchAnswers(); // Refresh answers list after submitting a new answer
-    } catch (error) {
-      console.error('Failed to submit answer:', error);
-      setError('Failed to submit answer. Please try again later.');
+
+      if (response.data.message === "Answer posted successfully") {
+        setNewAnswer("");
+        setError("");
+        setAnswers((prev) => [
+          ...prev,
+          { content: newAnswer, user_name: "You" },
+        ]);
+      }
+    } catch (err) {
+      console.error("Failed to submit answer:", err);
+      setError("Failed to submit answer. Please try again later.");
     }
   };
 
@@ -72,25 +95,36 @@ function QuestionDetail() {
 
   return (
     <div className="question-detail">
-        <h1>Question</h1>
-      <h2 className='title'>{question.title}</h2>
-      <p>{question.body}</p>
-      <h3 className='answers'>Answers From The Community</h3>
+      <h1>Question</h1>
+      <h2 className="title">{question.title}</h2>
+      <p>{question.description}</p>
+      <p>
+        <strong>Tag:</strong> {question.tag}
+      </p>
+      <p>
+        <strong>Asked by:</strong> {question.username}
+      </p>
+      <p>
+        <strong>Posted on:</strong>{" "}
+        {new Date(question.created_at).toLocaleDateString()}
+      </p>
+
+      <h3 className="answers">Answers From The Community</h3>
       {error && <p className="error-message">{error}</p>}
       {answers.length === 0 ? (
         <p>No answers yet. Be the first to answer!</p>
       ) : (
         <ul className="answers-list">
-          {answers.map((answer) => (
-            <li key={answer.answer_id} className="answer-item">
-              <span>Posted by: {answer.username}</span>
-              <p className='answer'>{answer.body}</p>
+          {answers.map((answer, index) => (
+            <li key={index} className="answer-item">
+              <span>Posted by: {answer.user_name}</span>
+              <p className="answer">{answer.content}</p>
             </li>
           ))}
         </ul>
       )}
-      <h3 className='question-answer'>Answer the Top Question</h3>
-      <p className='go-to-question-page'>Go to Question page</p>
+
+      <h3 className="question-answer">Answer the Top Question</h3>
       <form onSubmit={handleAnswerSubmit}>
         <textarea
           value={newAnswer}

@@ -1,12 +1,10 @@
-import React from 'react';
-import './BackgroundContainer.css';
+import React from "react";
+import "./BackgroundContainer.css";
 
 function BackgroundContainer() {
   return (
     <div className="background">
-      <div className="content">
-        {/* Your content here */}
-      </div>
+      <div className="content"></div>
     </div>
   );
 }

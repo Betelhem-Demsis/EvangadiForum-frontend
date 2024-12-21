@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { AuthContext } from '../../Hooks/AuthContext';
-import './AskQuestion.css';
+import React, { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { AuthContext } from "../../Hooks/AuthContext";
+import "./AskQuestion.css";
 
 function AskQuestion() {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
   const { isLoggedIn } = useContext(AuthContext);
@@ -16,15 +16,18 @@ function AskQuestion() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('https://localhost:3000/api/checkUser', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          "http://127.0.0.1:5000/api/users/check",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setUserId(response.data.userId);
       } catch (error) {
-        console.error('Failed to fetch user data:', error);
+        console.error("Failed to fetch user data:", error);
       }
     };
 
@@ -36,28 +39,28 @@ function AskQuestion() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isLoggedIn) {
-      setError('You must be logged in to ask a question.');
+      setError("You must be logged in to ask a question.");
       return;
     }
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const response = await axios.post(
-        'https://localhost:3000/api/question',
-        { user_id: userId, title, body: description },
+        "http://127.0.0.1:5000/api/questions",
+        { userid: userId, title, description: description },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
-      setSuccess('Question posted successfully!');
-      setError('');
-      navigate(`/questions/${response.data.question_id}`);
+      setSuccess("Question posted successfully!");
+      setError("");
+      navigate(`/questions/${response.data.questionid}`);
     } catch (error) {
-      setError('Failed to post the question. Please try again.');
-      setSuccess('');
-      console.error('Error posting question:', error);
+      setError("Failed to post the question. Please try again.");
+      setSuccess("");
+      console.error("Error posting question:", error);
     }
   };
 
@@ -73,7 +76,7 @@ function AskQuestion() {
         </ol>
       </div>
       <div className="question-form">
-        <h2 className='ask-a-question'>Ask a Public Question</h2>
+        <h2 className="ask-a-question">Ask a Public Question</h2>
         <h3>Go to Question Page</h3>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -99,7 +102,9 @@ function AskQuestion() {
           </div>
           {error && <p className="error-message">{error}</p>}
           {success && <p className="success-message">{success}</p>}
-          <button type="submit" className="submit-question-button">Post Your Question</button>
+          <button type="submit" className="submit-question-button">
+            Post Your Question
+          </button>
         </form>
       </div>
     </div>
