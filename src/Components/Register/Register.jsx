@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 import "./Register.css";
 
 function Register() {
@@ -11,7 +11,7 @@ function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const navigate = useNavigate(); // Use the navigate function from react-router-dom
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
